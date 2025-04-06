@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravlun - Product Management Interface</title>
+
+    <!-- Font Awesome CDN Link -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        /* --- CSS --- */
+
+        /* Reset & Base */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            /* Theme variables */
+            --bg-dark: #191820; --text-dark-primary: #f0f0f0; --text-dark-secondary: #a0a0a0; --accent-dark: #fccc9d; --emergency-dark: #f3344a; --shape-bg-dark: #ffffff; --shape-text-dark: #191820; --menu-bg-dark: #2a2933; --shadow-dark: rgba(0, 0, 0, 0.45); --border-dark: rgba(255, 255, 255, 0.1); --input-bg-dark: #3a3943; --button-active-dark: #555; --footer-bg-dark: #2e2d38; --selected-item-bg-dark: rgba(252, 204, 157, 0.15); --checkbox-border-dark: #777; --checkbox-checked-dark: var(--accent-dark); --disabled-text-dark: #666;
+            /* Report vars now use shape vars for integration */
+            --report-bg-dark: var(--shape-bg-dark); --report-text-dark: var(--shape-text-dark); --report-border-dark: var(--border-dark);
+
+            --bg-light: #f4f4f8; --text-light-primary: #1f1f1f; --text-light-secondary: #555555; --accent-light: #a5845f; --emergency-light: #dc3545; --shape-bg-light: #ffffff; --shape-text-light: #191820; --menu-bg-light: #e0e0e6; --shadow-light: rgba(0, 0, 0, 0.15); --border-light: rgba(0, 0, 0, 0.1); --input-bg-light: #e9e9ed; --button-active-light: #ccc; --footer-bg-light: #eaeaf0; --selected-item-bg-light: rgba(165, 132, 95, 0.1); --checkbox-border-light: #aaa; --checkbox-checked-light: var(--accent-light); --disabled-text-light: #aaa;
+            /* Report vars now use shape vars for integration */
+             --report-bg-light: var(--shape-bg-light); --report-text-light: var(--shape-text-light); --report-border-light: var(--border-light);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-dark-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* --- Main Content Area Shape --- */
+        .content-area {
+            background-color: var(--shape-bg-dark);
+            color: var(--shape-text-dark);
+            width: 95%;
+            max-width: 370px;
+            aspect-ratio: 9 / 16;
+            min-height: 600px; /* Ensure minimum height */
+            border-radius: 25px;
+            box-shadow: 0 15px 45px var(--shadow-dark);
+            position: relative; /* Context for absolute children */
+            overflow: hidden; /* Crucial */
+            transition: background-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
+            display: flex; /* Keep flex for potential direct children */
+            flex-direction: column; /* Stack children vertically by default */
+        }
+
+        /* Wrapper for the main page content (everything except the slide-out menu & report view) */
+        .main-page-content {
+             width: 100%;
+             height: 100%;
+             display: flex;
+             flex-direction: column; /* Stack header, scroll-area, footer */
+             position: relative; /* Changed from absolute */
+             z-index: 1;
+             transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+             overflow: hidden; /* Prevent content bleeding */
+        }
+        /* Hide main content when menu or report is active */
+         .content-area.menu-active .main-page-content,
+         .content-area.report-active .main-page-content {
+             opacity: 0;
+             pointer-events: none;
+             visibility: hidden;
+             transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+         }
+
+        /* --- Header within main content --- */
+        .main-header {
+            display: flex;
+            align-items: center;
+            padding: 18px 15px 12px 15px;
+            gap: 8px;
+            position: relative;
+            z-index: 5;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border-light);
+            background-color: var(--shape-bg-light); /* Match content area bg */
+            transition: border-color 0.4s ease, background-color 0.4s ease;
+        }
+
+        /* Menu Toggle */
+        .menu-toggle-btn {
+            background: none; border: none; color: var(--shape-text-dark); font-size: 1.5em; cursor: pointer; z-index: 101; padding: 5px; transition: color 0.4s ease, transform 0.3s ease, opacity 0.3s ease; margin-right: 5px; }
+        .menu-toggle-btn:hover { transform: scale(1.1); }
+        .content-area.menu-active .menu-toggle-btn { opacity: 0; pointer-events: none; } /* Still hide toggle when menu open */
+        /* Don't hide toggle when report open */
+
+        /* Search Bar */
+        .search-bar { flex-grow: 1; position: relative; display: flex; align-items: center; }
+        .search-bar input[type="search"] { width: 100%; padding: 9px 38px 9px 18px; border-radius: 18px; border: 1px solid var(--border-light); background-color: var(--input-bg-light); color: var(--shape-text-dark); font-size: 0.9em; transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease; }
+        .search-bar input[type="search"]::placeholder { color: var(--text-light-secondary); }
+        .search-bar .mic-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-light-secondary); font-size: 1.1em; cursor: pointer; padding: 5px; transition: color 0.4s ease; }
+        .search-bar .mic-btn:hover:not(.listening) { color: var(--accent-light); }
+        .search-bar .mic-btn:disabled { color: var(--disabled-text-light); cursor: not-allowed; }
+
+        /* Listening State */
+        .search-bar .mic-btn.listening { color: var(--emergency-dark); animation: pulse 1.5s infinite; }
+        body.light-theme .search-bar .mic-btn.listening { color: var(--emergency-light); }
+        @keyframes pulse { 0% { transform: translateY(-50%) scale(1); opacity: 0.7; } 50% { transform: translateY(-50%) scale(1.1); opacity: 1; } 100% { transform: translateY(-50%) scale(1); opacity: 0.7; } }
+
+        /* Report Button */
+        .report-btn { background: none; border: none; color: var(--shape-text-dark); font-size: 1.4em; cursor: pointer; padding: 5px; transition: color 0.4s ease, transform 0.3s ease; margin-left: 5px; }
+        .report-btn:hover { transform: scale(1.1); }
+
+        /* --- Scrollable Content Area (Filters + List) --- */
+        .content-scroll-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 0 0 10px 0;
+        }
+
+        /* --- Filters/Sort Bar --- */
+        .filter-sort-bar { display: flex; flex-direction: column; padding: 12px 15px 10px 15px; flex-shrink: 0; gap: 10px; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; background-color: var(--shape-bg-light); z-index: 4; transition: border-color 0.4s ease, background-color 0.4s ease; }
+        .category-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+        .category-filters button { padding: 5px 10px; border: 1px solid var(--border-light); background-color: transparent; color: var(--text-light-secondary); border-radius: 15px; font-size: 0.8em; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+        .category-filters button:hover { background-color: var(--input-bg-light); border-color: var(--text-light-secondary); }
+        .category-filters button.active { background-color: var(--accent-light); color: var(--shape-bg-light); border-color: var(--accent-light); font-weight: 600; }
+        .sort-by { display: flex; align-items: center; gap: 5px; justify-content: flex-end; }
+        .sort-by label { font-size: 0.8em; color: var(--text-light-secondary); }
+        .sort-by select { padding: 4px 7px; border-radius: 5px; border: 1px solid var(--border-light); background-color: var(--input-bg-light); color: var(--shape-text-dark); font-size: 0.8em; cursor: pointer; transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease; }
+
+        /* --- Product Listing --- */
+        .product-list-container { padding: 15px 15px; }
+        .product-category { margin-bottom: 20px; }
+        .product-category h3 { font-size: 1em; color: var(--shape-text-dark); margin-bottom: 10px; border-bottom: 1px dashed var(--border-light); padding-bottom: 4px; transition: color 0.4s ease, border-color 0.4s ease; }
+        .product-item { display: flex; align-items: center; padding: 12px 8px; margin-bottom: 8px; border-radius: 8px; background-color: transparent; border: 1px solid transparent; transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease; cursor: pointer; opacity: 0; transform: translateY(10px); animation: fadeInSlideUp 0.4s ease forwards; }
+        .product-item:nth-child(odd) { animation-delay: 0.05s; }
+        .product-item:nth-child(even) { animation-delay: 0.1s; }
+        .product-item:hover { background-color: var(--input-bg-light); }
+        .product-item.selected { background-color: var(--selected-item-bg-light); border-color: var(--accent-light); }
+        .item-select-checkbox { margin-right: 12px; flex-shrink: 0; appearance: none; width: 18px; height: 18px; border: 1.5px solid var(--checkbox-border-light); border-radius: 4px; cursor: pointer; position: relative; transition: background-color 0.2s ease, border-color 0.2s ease; vertical-align: middle; }
+        .item-select-checkbox:checked { background-color: var(--checkbox-checked-light); border-color: var(--checkbox-checked-light); }
+        .item-select-checkbox:checked::after { content: ''; display: block; width: 5px; height: 10px; border: solid var(--shape-bg-light); border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-50%, -50%); position: absolute; left: 50%; top: 45%; }
+        .item-content { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .product-item .item-name { font-weight: 600; font-size: 0.9em; color: var(--shape-text-dark); transition: color 0.4s ease; flex-basis: 55%; flex-shrink: 0; display: flex; flex-direction: column; line-height: 1.2; }
+        .item-product-code { font-size: 0.8em; color: var(--text-light-secondary); font-weight: 400; margin-top: 2px; transition: color 0.4s ease; }
+        .product-item .item-details { font-size: 0.8em; color: var(--text-light-secondary); text-align: right; transition: color 0.4s ease; flex-basis: 40%; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: nowrap; white-space: nowrap; }
+        .product-item .item-weight { min-width: 45px; text-align: right; }
+        .product-item .item-expiry { min-width: 50px; font-style: italic; text-align: right; }
+        @keyframes fadeInSlideUp { to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Action Footer --- */
+        .action-footer { padding: 10px 10px; border-top: 1px solid var(--border-light); background-color: var(--footer-bg-light); flex-shrink: 0; z-index: 5; display: flex; justify-content: space-around; align-items: center; transition: background-color 0.4s ease, border-color 0.4s ease; }
+        .action-footer button { background: none; border: none; color: var(--text-light-secondary); font-size: 0.75em; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 5px; border-radius: 4px; transition: color 0.3s ease, background-color 0.2s ease; width: 65px; text-align: center; }
+        .action-footer button i { font-size: 1.4em; margin-bottom: 2px; }
+        .action-footer button:hover:not(:disabled) { color: var(--accent-light); background-color: rgba(0,0,0,0.05); }
+        .action-footer button:disabled { color: var(--disabled-text-light); cursor: not-allowed; background-color: transparent; }
+
+        /* --- Side Menu --- */
+        .side-menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--menu-bg-dark); color: var(--text-dark-primary); z-index: 100; transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, color 0.4s ease; padding: 70px 30px 30px 30px; display: flex; flex-direction: column; gap: 25px; overflow-y: auto; pointer-events: none; /* Initially not interactive */ }
+        .side-menu.active { transform: translateX(0); pointer-events: auto; /* Interactive when active */ }
+        .menu-close-btn { position: absolute; top: 25px; right: 25px; background: none; border: none; color: var(--text-dark-primary); font-size: 2em; cursor: pointer; padding: 5px; z-index: 102; transition: color 0.4s ease, transform 0.3s ease; }
+        .menu-close-btn:hover { transform: rotate(90deg) scale(1.1); }
+        .menu-profile { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid var(--border-dark); padding-bottom: 25px; transition: border-bottom-color 0.4s ease; }
+        .menu-profile .icon { font-size: 2.8em; color: var(--text-dark-secondary); transition: color 0.4s ease; }
+        .menu-profile .username { font-size: 1.2em; font-weight: 600; color: var(--text-dark-primary); transition: color 0.4s ease; }
+        .menu-item { padding: 10px 0; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; flex-direction: column; }
+        .menu-item > span { font-size: 1.1em; display: block; transition: color 0.3s ease, transform 0.3s ease; color: var(--text-dark-primary); margin-bottom: 5px; }
+        .menu-item:hover > span { transform: translateX(5px); }
+        .help-section .emergency-button { display: none; margin-top: 10px; padding: 12px 20px; background-color: var(--emergency-dark); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; width: 100%; transition: background-color 0.4s ease; animation: fadeIn 0.5s ease; }
+        .help-section .emergency-button.show { display: block; }
+        .about-section #about-content { display: none; margin-top: 5px; padding-left: 0; font-size: 0.95em; color: var(--text-dark-secondary); transition: color 0.4s ease; animation: fadeIn 0.5s ease; }
+        .about-section #about-content.show { display: block; }
+        .settings-section .theme-switcher { display: none; margin-top: 10px; display: flex; gap: 10px; animation: fadeIn 0.5s ease; }
+        .settings-section.open .theme-switcher { display: flex; }
+        .theme-switcher button { padding: 8px 15px; border: 1px solid var(--text-dark-secondary); background: none; color: var(--text-dark-secondary); border-radius: 5px; cursor: pointer; font-size: 0.9em; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+        .theme-switcher button:hover { background-color: rgba(255, 255, 255, 0.1); }
+        .theme-switcher button.active-theme { background-color: var(--accent-dark); color: var(--shape-text-dark); font-weight: bold; border-color: var(--accent-dark); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Status Message --- */
+        .status-message { position: absolute; bottom: 20px; /* Position relative to viewport/body */ left: 50%; transform: translateX(-50%); background-color: rgba(40, 167, 69, 0.9); color: white; padding: 8px 18px; border-radius: 5px; z-index: 110; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0s linear 0.3s; font-size: 0.85em; white-space: nowrap; pointer-events: none; }
+        .status-message.show { opacity: 1; visibility: visible; transition: opacity 0.3s ease, visibility 0s linear 0s; }
+
+
+        /* --- Report View (Inside content-area) --- */
+        #report-view {
+            position: absolute; /* Position relative to content-area */
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--report-bg-dark); /* Use theme variable */
+            color: var(--report-text-dark); /* Use theme variable */
+            z-index: 50; /* Above main content, below menu */
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none; /* Not interactive when hidden */
+            transform: translateY(15px); /* Start slightly down */
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s linear 0.3s, background-color 0.4s ease, color 0.4s ease;
+            display: flex;
+            flex-direction: column; /* Stack header and content */
+        }
+        .content-area.report-active #report-view {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto; /* Interactive when shown */
+            transform: translateY(0);
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s linear 0s, background-color 0.4s ease, color 0.4s ease;
+        }
+
+        #report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 15px 12px 15px; /* Match main header padding */
+            border-bottom: 1px solid var(--report-border-dark); /* Use theme variable */
+            flex-shrink: 0; /* Prevent header shrinking */
+            transition: border-color 0.4s ease;
+        }
+        #report-title {
+            font-size: 1.1em; /* Slightly larger title */
+            font-weight: 600;
+        }
+        #report-close-btn {
+            background: none; border: none;
+            color: var(--report-text-dark); /* Use theme variable */
+            font-size: 1.6em; /* Larger close button */
+            cursor: pointer;
+            padding: 0 5px;
+            line-height: 1;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        #report-close-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            color: var(--emergency-dark); /* Use theme variable */
+        }
+        body.light-theme #report-close-btn:hover {
+             color: var(--emergency-light);
+        }
+
+        #report-content {
+            flex-grow: 1; /* Take remaining space */
+            overflow-y: auto; /* Enable scrolling for content */
+            padding: 15px 20px 20px 20px; /* Padding for the content itself */
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em; /* Slightly larger report text */
+            line-height: 1.6;
+            white-space: pre-wrap; /* Respect line breaks and wrap */
+        }
+
+
+        /* --- Light Theme Updates --- */
+        body.light-theme { background-color: var(--bg-light); color: var(--text-light-primary); }
+        body.light-theme .content-area { background-color: var(--shape-bg-light); color: var(--shape-text-light); box-shadow: 0 15px 45px var(--shadow-light); }
+        body.light-theme .main-header { border-bottom-color: var(--border-light); background-color: var(--shape-bg-light); }
+        body.light-theme .menu-toggle-btn { color: var(--shape-text-light); }
+        body.light-theme .search-bar input[type="search"] { background-color: var(--input-bg-light); border-color: var(--border-light); color: var(--shape-text-light); }
+        body.light-theme .search-bar input[type="search"]::placeholder { color: var(--text-light-secondary); }
+        body.light-theme .search-bar .mic-btn { color: var(--text-light-secondary); }
+        body.light-theme .search-bar .mic-btn:hover:not(.listening) { color: var(--accent-light); }
+        body.light-theme .search-bar .mic-btn:disabled { color: var(--disabled-text-light); }
+        body.light-theme .report-btn { color: var(--shape-text-light); }
+        body.light-theme .filter-sort-bar { border-bottom-color: var(--border-light); background-color: var(--shape-bg-light); }
+        body.light-theme .category-filters button { border-color: var(--border-light); color: var(--text-light-secondary); }
+        body.light-theme .category-filters button:hover { background-color: var(--input-bg-light); border-color: var(--text-light-secondary); }
+        body.light-theme .category-filters button.active { background-color: var(--accent-light); color: var(--shape-bg-light); border-color: var(--accent-light); }
+        body.light-theme .sort-by label { color: var(--text-light-secondary); }
+        body.light-theme .sort-by select { background-color: var(--input-bg-light); border-color: var(--border-light); color: var(--shape-text-light); }
+        body.light-theme .product-category h3 { color: var(--shape-text-light); border-color: var(--border-light); }
+        body.light-theme .product-item .item-name { color: var(--shape-text-light); }
+        body.light-theme .item-product-code { color: var(--text-light-secondary); }
+        body.light-theme .product-item .item-details { color: var(--text-light-secondary); }
+        body.light-theme .product-item:hover { background-color: var(--input-bg-light); }
+        body.light-theme .product-item.selected { background-color: var(--selected-item-bg-light); border-color: var(--accent-light); }
+        body.light-theme .item-select-checkbox { border-color: var(--checkbox-border-light); }
+        body.light-theme .item-select-checkbox:checked { background-color: var(--checkbox-checked-light); border-color: var(--checkbox-checked-light); }
+        body.light-theme .item-select-checkbox:checked::after { border-color: var(--shape-bg-light); }
+        body.light-theme .action-footer { background-color: var(--footer-bg-light); border-top-color: var(--border-light); }
+        body.light-theme .action-footer button { color: var(--text-light-secondary); }
+        body.light-theme .action-footer button:hover:not(:disabled) { color: var(--accent-light); background-color: rgba(0,0,0,0.05); }
+        body.light-theme .action-footer button:disabled { color: var(--disabled-text-light); }
+        body.light-theme .side-menu { background-color: var(--menu-bg-light); color: var(--text-light-primary); }
+        body.light-theme .side-menu .menu-close-btn { color: var(--text-light-primary); }
+        body.light-theme .menu-profile { border-bottom-color: var(--border-light); }
+        body.light-theme .menu-profile .icon { color: var(--text-light-secondary); }
+        body.light-theme .menu-profile .username { color: var(--text-light-primary); }
+        body.light-theme .menu-item > span { color: var(--text-light-primary); }
+        body.light-theme .emergency-button { background-color: var(--emergency-light); }
+        body.light-theme .about-section #about-content { color: var(--text-light-secondary); }
+        body.light-theme .theme-switcher button { border: 1px solid #ccc; color: var(--text-light-secondary); }
+        body.light-theme .theme-switcher button:hover { background-color: rgba(0, 0, 0, 0.05); }
+        body.light-theme .theme-switcher button.active-theme { background-color: var(--accent-light); color: white; border-color: var(--accent-light); }
+        body.light-theme .status-message { background-color: rgba(35, 150, 60, 0.9); }
+        /* Light theme report view */
+        body.light-theme #report-view { background-color: var(--report-bg-light); color: var(--report-text-light); }
+        body.light-theme #report-header { border-bottom-color: var(--report-border-light); }
+        body.light-theme #report-close-btn { color: var(--report-text-light); }
+
+
+        /* --- Dark Theme Updates --- */
+        body:not(.light-theme) .main-header { border-bottom-color: var(--border-dark); background-color: var(--shape-bg-dark); }
+        body:not(.light-theme) .menu-toggle-btn { color: var(--shape-text-dark); }
+        body:not(.light-theme) .search-bar input[type="search"] { background-color: var(--input-bg-dark); border-color: var(--border-dark); color: var(--text-dark-primary); }
+        body:not(.light-theme) .search-bar input[type="search"]::placeholder { color: var(--text-dark-secondary); }
+        body:not(.light-theme) .search-bar .mic-btn { color: var(--text-dark-secondary); }
+        body:not(.light-theme) .search-bar .mic-btn:hover:not(.listening) { color: var(--accent-dark); }
+        body:not(.light-theme) .search-bar .mic-btn:disabled { color: var(--disabled-text-dark); }
+        body:not(.light-theme) .report-btn { color: var(--shape-text-dark); }
+        body:not(.light-theme) .filter-sort-bar { border-bottom-color: var(--border-dark); background-color: var(--shape-bg-dark); }
+        body:not(.light-theme) .category-filters button { border-color: var(--border-dark); color: var(--text-dark-secondary); }
+        body:not(.light-theme) .category-filters button:hover { background-color: var(--button-active-dark); border-color: var(--text-dark-secondary); }
+        body:not(.light-theme) .category-filters button.active { background-color: var(--accent-dark); color: var(--shape-text-dark); border-color: var(--accent-dark); }
+        body:not(.light-theme) .sort-by label { color: var(--text-dark-secondary); }
+        body:not(.light-theme) .sort-by select { background-color: var(--input-bg-dark); border-color: var(--border-dark); color: var(--text-dark-primary); }
+        body:not(.light-theme) .product-category h3 { color: var(--shape-text-dark); border-color: var(--border-dark); }
+        body:not(.light-theme) .product-item .item-name { color: var(--shape-text-dark); }
+        body:not(.light-theme) .item-product-code { color: var(--text-dark-secondary); }
+        body:not(.light-theme) .product-item .item-details { color: var(--text-dark-secondary); }
+        body:not(.light-theme) .product-item:hover { background-color: var(--input-bg-dark); }
+        body:not(.light-theme) .product-item.selected { background-color: var(--selected-item-bg-dark); border-color: var(--accent-dark); }
+        body:not(.light-theme) .item-select-checkbox { border-color: var(--checkbox-border-dark); }
+        body:not(.light-theme) .item-select-checkbox:checked { background-color: var(--checkbox-checked-dark); border-color: var(--checkbox-checked-dark); }
+        body:not(.light-theme) .item-select-checkbox:checked::after { border-color: var(--shape-text-dark); }
+        body:not(.light-theme) .action-footer { background-color: var(--footer-bg-dark); border-top-color: var(--border-dark); }
+        body:not(.light-theme) .action-footer button { color: var(--text-dark-secondary); }
+        body:not(.light-theme) .action-footer button:hover:not(:disabled) { color: var(--accent-dark); background-color: rgba(255,255,255,0.05); }
+        body:not(.light-theme) .action-footer button:disabled { color: var(--disabled-text-dark); }
+        /* Dark theme report view */
+        body:not(.light-theme) #report-view { background-color: var(--report-bg-dark); color: var(--report-text-dark); }
+        body:not(.light-theme) #report-header { border-bottom-color: var(--report-border-dark); }
+        body:not(.light-theme) #report-close-btn { color: var(--report-text-dark); }
+
+
+    </style>
+</head>
+<body > <!-- Theme class added by JS -->
+
+    <!-- Main Content Shape -->
+    <div id="content-area" class="content-area"> <!-- report-active class added by JS -->
+
+        <!-- Wrapper for main page content (Hides when report or menu active) -->
+        <div class="main-page-content">
+            <!-- Header: Menu Toggle, Search, Report -->
+            <header class="main-header">
+                <button id="menu-toggle" class="menu-toggle-btn" aria-label="Open menu" aria-expanded="false">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-bar">
+                    <input type="search" id="product-search" placeholder="Search equipment...">
+                    <button class="mic-btn" id="mic-button" aria-label="Voice search" title="Start voice search">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                </div>
+                <button class="report-btn" id="report-button" aria-label="Generate product code report">
+                    <i class="fas fa-file-lines"></i>
+                </button>
+            </header>
+
+            <!-- Scrollable Area -->
+            <div class="content-scroll-area">
+                <!-- Filter/Sort Bar -->
+                <div class="filter-sort-bar">
+                     <div class="category-filters" id="category-filters">
+                         <!-- Category buttons generated by JS -->
+                     </div>
+                     <div class="sort-by">
+                         <label for="sort-select">Sort By:</label>
+                         <select id="sort-select">
+                             <option value="default">Default</option>
+                             <option value="name-asc">Name (A-Z)</option>
+                             <option value="name-desc">Name (Z-A)</option>
+                             <option value="expiry-asc">Expiry (Soonest)</option>
+                             <option value="expiry-desc">Expiry (Latest)</option>
+                         </select>
+                     </div>
+                </div>
+
+                <!-- Product Listing Area -->
+                <div class="product-list-container" id="product-list-container">
+                     <!-- Products loaded here by JS -->
+                      <p style="text-align: center; margin-top: 50px; color: var(--text-light-secondary);">Loading products...</p>
+                </div>
+            </div>
+
+            <!-- Action Footer -->
+            <footer class="action-footer" id="action-footer">
+                <button id="action-store" disabled>
+                    <i class="fas fa-box-archive"></i>
+                    <span>Store</span>
+                </button>
+                <button id="action-collect" disabled>
+                    <i class="fas fa-hand-holding-hand"></i>
+                    <span>Collect</span>
+                </button>
+                <button id="action-rearrange" disabled>
+                    <i class="fas fa-layer-group"></i>
+                    <span>Rearrange</span>
+                </button>
+                <button id="action-bin" disabled>
+                    <i class="fas fa-trash-can"></i>
+                    <span>Move to Bin</span>
+                </button>
+            </footer>
+        </div> <!-- End of main-page-content -->
+
+
+        <!-- Side Menu (Positioned absolutely inside content-area) -->
+        <nav id="side-menu" class="side-menu" aria-hidden="true">
+            <button id="menu-close" class="menu-close-btn" aria-label="Close menu">
+                <i class="fas fa-xmark"></i>
+            </button>
+            <div class="menu-profile">
+                <i class="icon fas fa-user-circle"></i>
+                <span class="username">Astr1137</span>
+            </div>
+            <div class="menu-item help-section">
+                <span id="help-text">Need Help?</span>
+                <button id="emergency-btn" class="emergency-button">Emergency Call</button>
+            </div>
+            <div class="menu-item about-section">
+                <span id="about-text">About Us</span>
+                <p id="about-content">We are Gravlun.</p>
+            </div>
+            <div class="menu-item settings-section">
+                <span id="settings-text">Settings</span>
+                <div class="theme-switcher">
+                     <button id="theme-light" data-theme="light">Light</button>
+                     <button id="theme-dark" data-theme="dark">Dark</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Report View (Positioned absolutely inside content-area) -->
+        <div id="report-view" aria-hidden="true">
+            <div id="report-header">
+                <span id="report-title">Product Code Report</span>
+                <button id="report-close-btn" aria-label="Close report">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            <div id="report-content">
+                <!-- Report content loaded here by JS -->
+            </div>
+        </div>
+
+    </div> <!-- End of content-area -->
+
+    <!-- Status Message Display (Positioned outside content-area) -->
+    <div id="status-message" class="status-message"></div>
+
+
+    <!-- --- JavaScript --- -->
+    <script>
+        // --- Elements ---
+        const contentArea = document.getElementById('content-area');
+        const mainPageContent = document.querySelector('.main-page-content'); // Get main content wrapper
+        const menuToggleBtn = document.getElementById('menu-toggle');
+        const menuCloseBtn = document.getElementById('menu-close');
+        const sideMenu = document.getElementById('side-menu');
+        const body = document.body;
+        const helpText = document.getElementById('help-text');
+        const emergencyBtn = document.getElementById('emergency-btn');
+        const aboutText = document.getElementById('about-text');
+        const aboutContent = document.getElementById('about-content');
+        const settingsText = document.getElementById('settings-text');
+        const settingsSection = document.querySelector('.settings-section');
+        const themeSwitcher = document.querySelector('.theme-switcher');
+        const lightThemeBtn = document.getElementById('theme-light');
+        const darkThemeBtn = document.getElementById('theme-dark');
+        const reportBtn = document.getElementById('report-button');
+        const searchInput = document.getElementById('product-search');
+        const micBtn = document.getElementById('mic-button');
+        const categoryFiltersContainer = document.getElementById('category-filters');
+        const sortSelect = document.getElementById('sort-select');
+        const productListContainer = document.getElementById('product-list-container');
+        const actionFooter = document.getElementById('action-footer');
+        const actionStoreBtn = document.getElementById('action-store');
+        const actionCollectBtn = document.getElementById('action-collect');
+        const actionRearrangeBtn = document.getElementById('action-rearrange');
+        const actionBinBtn = document.getElementById('action-bin');
+        const actionButtons = [actionStoreBtn, actionCollectBtn, actionRearrangeBtn, actionBinBtn];
+        const statusMessageElement = document.getElementById('status-message');
+        // Report View Elements
+        const reportView = document.getElementById('report-view');
+        const reportContentElement = document.getElementById('report-content');
+        const reportCloseBtn = document.getElementById('report-close-btn');
+
+        // --- Product Data ---
+         let productData = [
+             { id: 1, category: "Life Support & Survival", name: "Oxygen Supply", weight: "30 kg", expiryText: "3 days", expirySortValue: 72, code: 1131 },
+             { id: 2, category: "Life Support & Survival", name: "Water Supply", weight: "30 ltr", expiryText: "3 days", expirySortValue: 72, code: 1132 },
+             { id: 3, category: "Life Support & Survival", name: "CO₂ Scrubber Cartridges", weight: "15 kg", expiryText: "2 days", expirySortValue: 48, code: 1133 },
+             { id: 4, category: "Life Support & Survival", name: "Fire Extinguisher", weight: "3 kg", expiryText: "3 days", expirySortValue: 72, code: 1134 },
+             { id: 5, category: "Astronaut Supplies", name: "Food & Beverages", weight: "18 kg", expiryText: "28 hrs", expirySortValue: 28, code: 1135 },
+             { id: 6, category: "Astronaut Supplies", name: "Hygiene Kit", weight: "6 kg", expiryText: "3 days", expirySortValue: 72, code: 1136 },
+             { id: 7, category: "Astronaut Supplies", name: "Spacesuits & Clothing", weight: "60 kg", expiryText: "---", expirySortValue: 99999, code: 1137 },
+             { id: 8, category: "Scientific Equipment", name: "Microgravity Experiment Kits", weight: "30 kg", expiryText: "3 days", expirySortValue: 72, code: 1138 },
+             { id: 9, category: "Scientific Equipment", name: "Radiation Detectors & Sensors", weight: "7 kg", expiryText: "3 days", expirySortValue: 72, code: 1139 },
+             { id: 10, category: "Scientific Equipment", name: "Cameras & Imaging Equipment", weight: "15 kg", expiryText: "3 days", expirySortValue: 72, code: 1140 },
+             { id: 11, category: "Communication & Navigation", name: "Satellite Communication Devices", weight: "8 kg", expiryText: "3 days", expirySortValue: 72, code: 1141 },
+             { id: 12, category: "Communication & Navigation", name: "GPS & Inertial Navigation", weight: "15 kg", expiryText: "3 days", expirySortValue: 72, code: 1142 },
+             { id: 13, category: "Communication & Navigation", name: "Onboard Computers & Storage", weight: "20 kg", expiryText: "3 days", expirySortValue: 72, code: 1143 },
+             { id: 14, category: "Reentry & Recovery", name: "Parachute System", weight: "120 kg", expiryText: "3 days", expirySortValue: 72, code: 1144 },
+             { id: 15, category: "Reentry & Recovery", name: "Heat Shield", weight: "400 kg", expiryText: "3 days", expirySortValue: 72, code: 1145 },
+             { id: 16, category: "Reentry & Recovery", name: "Emergency Flotation Devices", weight: "15 kg", expiryText: "3 days", expirySortValue: 72, code: 1146 },
+        ];
+
+        // --- State Variables ---
+        let currentFilter = 'All';
+        let currentSort = 'default';
+        let currentSearchTerm = '';
+        let selectedProductIds = new Set();
+        let recognition;
+        let isRecognizing = false;
+
+        // --- Core Functions ---
+
+        // Menu & Theme
+        function openMenu() {
+            if (!sideMenu || !contentArea) return;
+            hideReportView(); // Close report if open when menu opens
+            sideMenu.classList.add('active');
+            contentArea.classList.add('menu-active');
+            sideMenu.setAttribute('aria-hidden', 'false');
+            menuToggleBtn.setAttribute('aria-expanded', 'true');
+        }
+        function closeMenu() {
+            if (!sideMenu || !contentArea) return;
+            sideMenu.classList.remove('active');
+            contentArea.classList.remove('menu-active');
+            sideMenu.setAttribute('aria-hidden', 'true');
+            menuToggleBtn.setAttribute('aria-expanded', 'false');
+            resetMenuSections();
+        }
+        function resetMenuSections() { if (emergencyBtn) emergencyBtn.classList.remove('show'); if (aboutContent) aboutContent.classList.remove('show'); if (settingsSection) settingsSection.classList.remove('open'); }
+        function applyTheme(theme) {
+            if (theme === 'light') body.classList.add('light-theme');
+            else body.classList.remove('light-theme');
+            if (lightThemeBtn) lightThemeBtn.classList.toggle('active-theme', theme === 'light');
+            if (darkThemeBtn) darkThemeBtn.classList.toggle('active-theme', theme === 'dark');
+            localStorage.setItem('websiteTheme', theme);
+        }
+
+        // Report View Functions
+        function showReportView() {
+            if (!reportView || !reportContentElement || !contentArea) return;
+            closeMenu(); // Ensure menu is closed when report opens
+
+            // Generate report text
+            let reportText = "";
+            productData.sort((a, b) => a.code - b.code) // Sort by code for the report
+                       .forEach(product => {
+                if (product.code) {
+                    reportText += `${product.name}: ${product.code}\n`;
+                }
+            });
+            reportContentElement.textContent = reportText.trim();
+
+            contentArea.classList.add('report-active');
+            reportView.setAttribute('aria-hidden', 'false');
+            reportCloseBtn.focus(); // Focus the close button for accessibility
+        }
+
+        function hideReportView() {
+            if (!reportView || !contentArea) return;
+            contentArea.classList.remove('report-active');
+            reportView.setAttribute('aria-hidden', 'true');
+        }
+
+        // Update Action Buttons Enable/Disable State
+        function updateActionButtonsState() {
+            const hasSelection = selectedProductIds.size > 0;
+            actionButtons.forEach(button => {
+                if(button) button.disabled = !hasSelection;
+            });
+        }
+
+        // Handle Product Selection Toggle
+        function handleProductSelect(event, productId, itemDiv, checkbox) {
+            const isCheckboxClick = event.target === checkbox;
+            if (isCheckboxClick) return;
+
+            if (selectedProductIds.has(productId)) {
+                checkbox.checked = false;
+                selectedProductIds.delete(productId);
+                itemDiv.classList.remove('selected');
+            } else {
+                checkbox.checked = true;
+                selectedProductIds.add(productId);
+                itemDiv.classList.add('selected');
+            }
+            updateActionButtonsState();
+        }
+
+        // Render Products in the List
+        function renderProducts(products) {
+            if (!productListContainer) return;
+            productListContainer.innerHTML = '';
+
+            if (products.length === 0) {
+                productListContainer.innerHTML = '<p style="text-align: center; margin-top: 30px; color: var(--text-light-secondary);">No products match criteria.</p>';
+                return;
+            }
+
+            const groupedProducts = products.reduce((acc, product) => {
+                const category = product.category;
+                if (!acc[category]) acc[category] = [];
+                acc[category].push(product);
+                return acc;
+            }, {});
+
+            const categoryOrder = ["Life Support & Survival", "Astronaut Supplies", "Scientific Equipment", "Communication & Navigation", "Reentry & Recovery"];
+
+            categoryOrder.forEach(categoryName => {
+                if (groupedProducts[categoryName]) {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'product-category';
+                    const categoryTitle = document.createElement('h3');
+                    categoryTitle.textContent = categoryName.replace(/ &/g, ' & ');
+                    categoryDiv.appendChild(categoryTitle);
+
+                    groupedProducts[categoryName].forEach((product, index) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'product-item';
+                        itemDiv.dataset.productId = product.id;
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.className = 'item-select-checkbox';
+                        checkbox.id = `product-check-${product.id}`;
+                        checkbox.checked = selectedProductIds.has(product.id);
+                        if (checkbox.checked) itemDiv.classList.add('selected');
+
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'item-content';
+                        contentDiv.innerHTML = `
+                            <span class="item-name">
+                                ${product.name}
+                                ${product.code ? `<span class="item-product-code">#${product.code}</span>` : ''}
+                            </span>
+                            <span class="item-details">
+                                <span class="item-weight">${product.weight}</span>
+                                <span class="item-expiry">${product.expiryText}</span>
+                            </span>`;
+
+                        itemDiv.appendChild(checkbox);
+                        itemDiv.appendChild(contentDiv);
+
+                        itemDiv.addEventListener('click', (e) => handleProductSelect(e, product.id, itemDiv, checkbox));
+                        checkbox.addEventListener('change', (e) => {
+                             if (e.target.checked) {
+                                 selectedProductIds.add(product.id);
+                                 itemDiv.classList.add('selected');
+                             } else {
+                                 selectedProductIds.delete(product.id);
+                                 itemDiv.classList.remove('selected');
+                             }
+                             updateActionButtonsState();
+                         });
+
+                        itemDiv.style.animationDelay = `${index * 0.05}s`;
+                        categoryDiv.appendChild(itemDiv);
+                    });
+                    productListContainer.appendChild(categoryDiv);
+                }
+            });
+        }
+
+        // Filter, Sort, Search, and Update Display
+        function updateProductDisplay() {
+             let filteredProducts = [...productData]; // Create a copy to sort/filter
+            // Apply Search Filter
+            if (currentSearchTerm) {
+                 filteredProducts = filteredProducts.filter(p =>
+                     p.name.toLowerCase().includes(currentSearchTerm) ||
+                     p.category.toLowerCase().includes(currentSearchTerm) ||
+                     (p.code && String(p.code).includes(currentSearchTerm))
+                 );
+            }
+            // Apply Category Filter
+            if (currentFilter !== 'All') { filteredProducts = filteredProducts.filter(p => p.category === currentFilter); }
+            // Apply Sorting
+            switch (currentSort) {
+                case 'name-asc': filteredProducts.sort((a, b) => a.name.localeCompare(b.name)); break;
+                case 'name-desc': filteredProducts.sort((a, b) => b.name.localeCompare(a.name)); break;
+                case 'expiry-asc': filteredProducts.sort((a, b) => a.expirySortValue - b.expirySortValue); break;
+                case 'expiry-desc': filteredProducts.sort((a, b) => b.expirySortValue - a.expirySortValue); break;
+                case 'default': default:
+                     filteredProducts.sort((a, b) => a.id - b.id); // Sort by ID for predictable default view
+                    break;
+            }
+            renderProducts(filteredProducts);
+            updateActionButtonsState();
+        }
+
+        // Setup Category Filter Buttons
+        function setupCategoryFilters() {
+            if (!categoryFiltersContainer) return;
+            const categories = ['All', ...new Set(productData.map(p => p.category))];
+            categoryFiltersContainer.innerHTML = '';
+            categories.forEach(category => {
+                const button = document.createElement('button');
+                button.textContent = category.replace(/ &/g, ' & ');
+                button.dataset.category = category;
+                if (category === currentFilter) button.classList.add('active');
+                button.addEventListener('click', () => {
+                    categoryFiltersContainer.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    currentFilter = button.dataset.category;
+                    updateProductDisplay();
+                });
+                categoryFiltersContainer.appendChild(button);
+            });
+        }
+
+        // Function to clear selection
+        function clearSelection() {
+             selectedProductIds.clear();
+             productListContainer.querySelectorAll('.product-item.selected').forEach(item => {
+                 item.classList.remove('selected');
+                 const checkbox = item.querySelector('.item-select-checkbox');
+                 if (checkbox) checkbox.checked = false;
+             });
+             updateActionButtonsState();
+        }
+
+        // Function to show temporary status message
+        function showTemporaryMessage(message, duration = 2000) {
+            if (!statusMessageElement) return;
+            statusMessageElement.textContent = message;
+            statusMessageElement.classList.add('show');
+            setTimeout(() => {
+                statusMessageElement.classList.remove('show');
+            }, duration);
+        }
+
+        // --- Speech Recognition Setup ---
+        function setupSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.warn("Speech Recognition API not supported.");
+                if (micBtn) { micBtn.disabled = true; micBtn.title = "Voice search not supported"; }
+                return;
+            }
+            recognition = new SpeechRecognition();
+            recognition.continuous = false; recognition.lang = 'en-US'; recognition.interimResults = false; recognition.maxAlternatives = 1;
+            recognition.onstart = () => { isRecognizing = true; micBtn.classList.add('listening'); micBtn.title = "Listening..."; };
+            recognition.onresult = (event) => { const transcript = event.results[0][0].transcript; searchInput.value = transcript; searchInput.dispatchEvent(new Event('input', { bubbles: true })); };
+            recognition.onerror = (event) => { console.error("Speech recognition error:", event.error); let msg = "Speech error."; if (event.error === 'no-speech') msg = "No speech detected."; else if (event.error === 'audio-capture') msg = "Mic error."; else if (event.error === 'not-allowed') msg = "Mic access denied."; showTemporaryMessage(msg, 3000); };
+            recognition.onend = () => { isRecognizing = false; micBtn.classList.remove('listening'); micBtn.title = "Start voice search"; };
+        }
+
+        // --- Event Listeners Setup ---
+
+        // Menu Toggle/Close
+        if (menuToggleBtn) menuToggleBtn.addEventListener('click', openMenu);
+        if (menuCloseBtn) menuCloseBtn.addEventListener('click', closeMenu);
+
+        // Report View Toggle
+        if (reportBtn) { reportBtn.addEventListener('click', showReportView); }
+        if (reportCloseBtn) { reportCloseBtn.addEventListener('click', hideReportView); }
+
+        // Global Handlers (Click outside menu, Escape key)
+        document.addEventListener('click', (event) => {
+            // Close menu if clicking outside the menu AND not on the toggle button
+             if (sideMenu?.classList.contains('active') &&
+                 !sideMenu.contains(event.target) &&
+                 !menuToggleBtn?.contains(event.target)) {
+                closeMenu();
+             }
+         });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                if (sideMenu?.classList.contains('active')) closeMenu();
+                if (contentArea?.classList.contains('report-active')) hideReportView();
+            }
+         });
+
+        // Internal Menu Items
+        if (helpText && emergencyBtn) { helpText.addEventListener('click', () => { emergencyBtn.classList.toggle('show'); aboutContent?.classList.remove('show'); settingsSection?.classList.remove('open'); }); }
+        if (emergencyBtn) { emergencyBtn.addEventListener('click', () => { showTemporaryMessage('Emergency Call Initiated!', 3000); }); }
+        if (aboutText && aboutContent) { aboutText.addEventListener('click', () => { aboutContent.classList.toggle('show'); emergencyBtn?.classList.remove('show'); settingsSection?.classList.remove('open'); }); }
+        if (settingsText && settingsSection) { settingsText.addEventListener('click', () => { settingsSection.classList.toggle('open'); emergencyBtn?.classList.remove('show'); aboutContent?.classList.remove('show'); }); }
+
+        // Theme Switching
+        if (lightThemeBtn && darkThemeBtn) {
+            lightThemeBtn.addEventListener('click', () => applyTheme('light'));
+            darkThemeBtn.addEventListener('click', () => applyTheme('dark'));
+        }
+
+        // Main Content Controls: Search Input, Sort
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => { currentSearchTerm = e.target.value.toLowerCase().trim(); updateProductDisplay(); });
+            searchInput.addEventListener('search', (e) => { if (!e.target.value) { currentSearchTerm = ''; updateProductDisplay(); } });
+        }
+        if (sortSelect) { sortSelect.addEventListener('change', (e) => { currentSort = e.target.value; updateProductDisplay(); }); }
+
+        // Mic Button Click Handler
+        if (micBtn) {
+            micBtn.addEventListener('click', () => {
+                if (!recognition) { showTemporaryMessage("Voice search unavailable.", 2500); return; }
+                if (isRecognizing) { recognition.stop(); }
+                else { try { recognition.start(); } catch (error) { console.error("Mic start error:", error); showTemporaryMessage("Could not start voice search.", 3000); } }
+            });
+        }
+
+        // Action Button Event Listeners (Rearrange updated)
+         actionButtons.forEach(button => {
+            if (!button) return;
+            button.addEventListener('click', () => {
+                if (button.disabled) return;
+                const selectedIdsArray = Array.from(selectedProductIds);
+                if (selectedIdsArray.length === 0 && button.id !== 'action-rearrange') {
+                    showTemporaryMessage("Please select one or more items.", 2500); return;
+                }
+                let actionMsg = "";
+                let requiresUpdate = false;
+
+                switch (button.id) {
+                    case 'action-store':
+                        actionMsg = `Storing ${selectedIdsArray.length} item(s)`;
+                        console.log(`${button.id}:`, selectedIdsArray);
+                        clearSelection(); // Clear selection after confirming action
+                        break;
+                    case 'action-collect':
+                        actionMsg = "Collected successfully";
+                        console.log(`${button.id}:`, selectedIdsArray);
+                        productData = productData.filter(p => !selectedIdsArray.includes(p.id));
+                        clearSelection();
+                        requiresUpdate = true; // Need to update display & filters
+                        break;
+                    case 'action-rearrange':
+                        actionMsg = "Rearranging items (refreshing)...";
+                        console.log(`${button.id}: Triggered page refresh.`);
+                        showTemporaryMessage(actionMsg, 1500); // Show brief message before reload
+                        // Add a slight delay before reloading to allow the message to potentially show
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 50); // Short delay
+                        return; // Exit early as page will reload
+                    case 'action-bin':
+                        actionMsg = `Moved ${selectedIdsArray.length} item(s) to bin`;
+                        console.log(`${button.id}:`, selectedIdsArray);
+                        productData = productData.filter(p => !selectedIdsArray.includes(p.id));
+                        clearSelection();
+                        requiresUpdate = true; // Need to update display & filters
+                        break;
+                    default:
+                        console.error("Unknown action:", button.id);
+                        return;
+                }
+
+                // Only show message/update if not rearranging
+                if (button.id !== 'action-rearrange') {
+                     showTemporaryMessage(actionMsg);
+                     if (requiresUpdate) {
+                         updateProductDisplay(); // Update list after removal
+                         setupCategoryFilters(); // Update filters if categories changed
+                     }
+                }
+            });
+        });
+
+        // --- Initial Page Load Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('websiteTheme') || 'dark';
+            applyTheme(savedTheme);
+            setupCategoryFilters();
+            setupSpeechRecognition();
+            updateProductDisplay();
+            updateActionButtonsState();
+            // Set initial ARIA states
+            if (sideMenu) sideMenu.setAttribute('aria-hidden', 'true');
+            if (reportView) reportView.setAttribute('aria-hidden', 'true');
+            console.log("Product page initialized.");
+        });
+
+    </script>
+
+</body>
+</html>

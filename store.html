@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravlun - Cargo Storage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+        input {
+            width: 200px;
+        }
+        button {
+            background: #00c6ff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #0072ff;
+        }
+        .cargo-list {
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .cargo-item {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+        .remove-btn {
+            background: #ff3b30;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .remove-btn:hover {
+            background: #c62828;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Cargo Storage</h1>
+        <p>Manage your stored cargo</p>
+
+        <input type="text" id="cargoName" placeholder="Enter Cargo Name">
+        <input type="number" id="cargoWeight" placeholder="Enter Weight (kg)">
+        <button onclick="addCargo()">Add Cargo</button>
+
+        <div class="cargo-list" id="cargoList">
+            <h3>Stored Cargo</h3>
+        </div>
+
+        <button onclick="window.location.href='/index'">Back to Dashboard</button>
+    </div>
+
+    <script>
+        function loadCargo() {
+            let cargoData = JSON.parse(localStorage.getItem("cargo")) || [];
+            let cargoList = document.getElementById("cargoList");
+            cargoList.innerHTML = "<h3>Stored Cargo</h3>";
+
+            cargoData.forEach((cargo, index) => {
+                let div = document.createElement("div");
+                div.classList.add("cargo-item");
+                div.innerHTML = `${cargo.name} - ${cargo.weight}kg 
+                    <button class="remove-btn" onclick="removeCargo(${index})">X</button>`;
+                cargoList.appendChild(div);
+            });
+        }
+
+        function addCargo() {
+            let name = document.getElementById("cargoName").value;
+            let weight = document.getElementById("cargoWeight").value;
+            
+            if (name && weight) {
+                let cargoData = JSON.parse(localStorage.getItem("cargo")) || [];
+                cargoData.push({ name, weight });
+                localStorage.setItem("cargo", JSON.stringify(cargoData));
+                loadCargo();
+            } else {
+                alert("Enter valid cargo details!");
+            }
+        }
+
+        function removeCargo(index) {
+            let cargoData = JSON.parse(localStorage.getItem("cargo"));
+            cargoData.splice(index, 1);
+            localStorage.setItem("cargo", JSON.stringify(cargoData));
+            loadCargo();
+        }
+
+        window.onload = loadCargo;
+    </script>
+
+</body>
+</html>

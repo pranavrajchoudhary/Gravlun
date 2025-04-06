@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attractive Login</title>
+
+    <!-- Font Awesome CDN Link (for icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        /* --- CSS --- */
+
+        /* Reset default browser styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Apply styles to the entire body */
+        body {
+            background-color: #191820;
+            color: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* The white container shape */
+        .content-area {
+            background-color: #ffffff;
+            width: 95%;
+            max-width: 370px;
+            aspect-ratio: 9 / 16;
+            border-radius: 25px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.45); /* Slightly stronger shadow */
+            color: #191820;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 35px 30px; /* Slightly more padding */
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px) scale(0.98);
+            animation: fadeInScaleUp 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s forwards; /* Smoother animation */
+        }
+
+        /* Keyframes for entry animation */
+        @keyframes fadeInScaleUp {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Login Form Specific Styles */
+        .login-form {
+            width: 100%;
+            text-align: center;
+            display: flex; /* Use flex for easier alignment within form */
+            flex-direction: column;
+            align-items: center; /* Center form elements */
+        }
+
+        .login-form h1 {
+            font-size: 2em; /* Larger title */
+            margin-bottom: 30px; /* More space below title */
+            color: #191820;
+            font-weight: 700; /* Bolder title */
+             letter-spacing: -0.5px;
+        }
+
+        /* Style for input fields container */
+        .input-group {
+            margin-bottom: 20px;
+            width: 100%;
+            position: relative; /* Needed for absolute icon positioning */
+        }
+
+        /* Input Icons Styling */
+        .input-group .icon {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 15px;
+            color: #aaa; /* Icon color */
+            font-size: 1.1em; /* Slightly larger icon */
+            transition: color 0.3s ease;
+        }
+
+        /* Password Toggle Icon Specifics */
+        .input-group .toggle-password {
+            left: auto; /* Override left positioning */
+            right: 15px;
+            cursor: pointer;
+        }
+        .input-group .toggle-password:hover {
+            color: #777;
+        }
+
+
+        .login-form input[type="text"],
+        .login-form input[type="password"] {
+            width: 100%;
+            padding: 15px 15px 15px 45px; /* Increased padding: top/bottom, right, left (for icon) */
+            border: 1px solid #ccc;
+            border-radius: 10px; /* Slightly more rounded inputs */
+            font-size: 1em;
+            color: #191820;
+            background-color: #f8f8f8; /* Slightly adjusted bg */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+         /* Adjust padding for password input to make space for eye icon */
+         .login-form input[type="password"] {
+             padding-right: 45px;
+         }
+
+
+        .login-form input[type="text"]::placeholder,
+        .login-form input[type="password"]::placeholder {
+            color: #aaa;
+        }
+
+        /* Input field focus effect */
+        .login-form input[type="text"]:focus,
+        .login-form input[type="password"]:focus {
+            outline: none;
+            border-color: #f3344a;
+            box-shadow: 0 0 8px rgba(243, 52, 74, 0.3);
+        }
+
+        /* Change icon color when input is focused */
+         .login-form input[type="text"]:focus + .icon,
+         .login-form input[type="password"]:focus + .icon,
+         .login-form input[type="password"]:focus ~ .toggle-password /* Use ~ general sibling combinator */
+         {
+             color: #f3344a; /* Match focus color */
+         }
+
+
+        /* Login Button Styles */
+        .login-button {
+            width: 80%; /* Make button slightly less wide than inputs */
+            padding: 14px; /* Adjust padding for roundness */
+            border: none;
+            border-radius: 50px;      /* <<< MAKE BUTTON ROUND <<< */
+            background: #f3344a; /* Linear gradient for more flair */
+             /* background: linear-gradient(45deg, #f3344a, #f76b8a); */
+            color: #ffffff;
+            font-size: 1.15em; /* Slightly larger font */
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            margin-bottom: 25px;
+            transition: all 0.3s ease; /* Transition all properties */
+            letter-spacing: 0.5px;
+        }
+
+        /* Button Hover Effect */
+        .login-button:hover {
+            background: #d72a3f; /* Slightly darker solid color on hover */
+             /* background: linear-gradient(45deg, #d92a40, #e55a75); */ /* Darker gradient */
+            transform: translateY(-4px) scale(1.02); /* More noticeable lift and slight scale */
+            box-shadow: 0 8px 18px rgba(243, 52, 74, 0.35); /* Stronger shadow */
+        }
+
+        /* Button Active/Click Effect */
+        .login-button:active {
+             transform: translateY(-2px) scale(0.99); /* Smaller lift/scale on click */
+             box-shadow: 0 4px 10px rgba(243, 52, 74, 0.3);
+             background: #c12033; /* Even darker solid */
+             /* background: linear-gradient(45deg, #c12033, #d92a40); */ /* Darkest gradient */
+        }
+
+        /* Text/Links under the button */
+        .extra-links {
+            text-align: center;
+        }
+
+        .extra-links a {
+            color: #fccc9d;
+            text-decoration: none;
+            font-size: 0.9em;
+            margin: 0 10px;
+            transition: color 0.3s ease, letter-spacing 0.3s ease; /* Add letter-spacing transition */
+        }
+
+        .extra-links a:hover {
+            color: #eab985;
+            text-decoration: underline;
+            letter-spacing: 0.3px; /* Slightly expand spacing on hover */
+        }
+
+        /* Placeholder for Error Message */
+        .error-message {
+            color: #f3344a;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            min-height: 1.2em;
+            width: 100%; /* Ensure it takes full width */
+            text-align: center;
+             /* display: none; */
+        }
+
+    </style>
+
+</head>
+<body>
+
+    <!-- --- HTML Content --- -->
+
+    <div class="content-area">
+
+        <!-- Login Form -->
+        <!-- The action and method attributes are correct for your Flask route -->
+        <form action="{{ url_for('login') }}" method="post" class="login-form">
+            <h1>Welcome Back!</h1> <!-- Changed title slightly -->
+
+            <!-- Error Message Placeholder - UPDATED -->
+            <div class="error-message" id="errorMessage">
+                 <!-- Display Flashed Messages Here -->
+                 {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {{ messages[0] }} {# Display the first flashed message #}
+                    {% endif %}
+                 {% endwith %}
+            </div>
+
+            <!-- Username Input -->
+            <div class="input-group">
+                 <!-- The name="username" matches request.form['username'] in Flask -->
+                <input type="text" id="username" name="username" placeholder="Username" required>
+                 <!-- Font Awesome User Icon -->
+                 <i class="icon fas fa-user"></i>
+            </div>
+
+            <!-- Password Input -->
+            <div class="input-group">
+                 <!-- The name="password" matches request.form['password'] in Flask -->
+                <input type="password" id="password" name="password" placeholder="Password" required>
+                <!-- Font Awesome Lock Icon (initially) -->
+                <i class="icon fas fa-lock"></i>
+                 <!-- Font Awesome Eye Icon (for toggling) -->
+                 <i class="icon toggle-password fas fa-eye" id="togglePassword"></i>
+            </div>
+
+            <!-- Login Button -->
+            <button type="submit" class="login-button">Login</button>
+
+            <!-- Extra Links -->
+            <div class="extra-links">
+                <a href="#">Forgot Password?</a>
+                <!-- <a href="#">Sign Up</a> -->
+            </div>
+        </form>
+
+    </div>
+
+
+    <!-- --- JavaScript --- -->
+    <script>
+        // Keep your existing JavaScript for the password toggle
+        console.log("Website loaded. Login form updated with icons and round button.");
+
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function (e) {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye-slash');
+                this.classList.toggle('fa-eye');
+            });
+        }
+
+        // No need for the example JS error display function anymore,
+        // as Flask's flash messages will handle it.
+        // function displayError(message) { ... }
+
+    </script>
+
+</body>
+</html>
